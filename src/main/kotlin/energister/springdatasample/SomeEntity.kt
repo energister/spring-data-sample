@@ -11,12 +11,12 @@ import javax.persistence.Id
 class SomeEntity(var value: Int) {
     @Id
     @GenericGenerator(
-            name = "tariff_id_seq",
+            name = "some_entity_id_seq",
             strategy = "org.hibernate.id.enhanced.SequenceStyleGenerator",
-            parameters = [Parameter(name = "sequence_name", value = "tariff_id_seq"),
+            parameters = [Parameter(name = "sequence_name", value = "some_entity_id_seq"),
                 Parameter(name = "initial_value", value = "1"),
                 Parameter(name = "increment_size", value = "1")]
     )
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "tariff_id_seq")
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "some_entity_id_seq")
     val id: Long? = null
 }
