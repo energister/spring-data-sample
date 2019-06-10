@@ -1,0 +1,7 @@
+spring.jpa.properties.hibernate.jdbc.lob.non_contextual_creation: true
+spring.jpa.properties.hibernate.dialect: org.hibernate.dialect.PostgreSQL9Dialect
+spring.jpa.database-platform: org.hibernate.dialect.PostgreSQL9Dialect
+spring.datasource.url: jdbc:postgresql://localhost:5432/spring-data-sample
+spring.datasource.username: spring-data-sample
+spring.datasource.password: spring-data-sample
+
