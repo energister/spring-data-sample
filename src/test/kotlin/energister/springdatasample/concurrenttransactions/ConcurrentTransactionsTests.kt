@@ -102,4 +102,36 @@ class ConcurrentTransactionsTests {
 
         firstOperation.get()
     }
+
+    /**
+     * Same as [updateExistingEntity]
+     * but calls [UpdateRowService.updateEntityAfterItWasFetched]
+     * instead of the [UpdateRowService.firstOperation]
+     */
+    @Test
+    fun updateExistingEntityAfterItWasFetched() {
+        // create entity if it doesn't exist
+        val entity = repository.findAll().firstOrNull()
+        val entityId: Long = if (entity == null) {
+            repository.save(SomeEntity(1)).id!!
+        } else {
+            entity.id!!
+        }
+
+        val firstOperationTransactionStarted = OneOffFlag()
+        val secondOperationCompleted = OneOffFlag()
+
+        val firstOperation = executeInThread {
+            updateService.updateEntityAfterItWasFetched(entityId, firstOperationTransactionStarted, secondOperationCompleted)
+            logger.debug { "T1 has been committed" }
+        }
+
+        firstOperationTransactionStarted.await()
+
+        updateService.secondOperation(entityId)
+        logger.debug { "T2 has been committed" }
+        secondOperationCompleted.set()
+
+        firstOperation.get()
+    }
 }

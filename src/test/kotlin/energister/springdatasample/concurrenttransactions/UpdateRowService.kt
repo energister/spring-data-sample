@@ -5,7 +5,6 @@ import energister.springdatasample.SomeEntity
 import energister.springdatasample.SomeEntityRepository
 import mu.KotlinLogging
 import org.springframework.transaction.annotation.Transactional
-import java.time.LocalDate
 
 open class UpdateRowService(private val repository: SomeEntityRepository) {
     private val logger = KotlinLogging.logger {}
@@ -13,9 +12,25 @@ open class UpdateRowService(private val repository: SomeEntityRepository) {
     @Transactional
     open fun firstOperation(key: Long, transactionStarted: OneOffFlag, startOperationSignal: OneOffFlag) {
         logger.debug { "T1 has been opened" }
+        transactionStarted.set()
 
-//        val entity = getEntity()
-//        logger.debug { "T1: entity is $entity1" }
+        startOperationSignal.await()
+        logger.debug { "T1 continue to do its job" }
+
+        val entity2 = getEntity2(key)
+        logger.debug { "T1: entity is $entity2" }
+        increaseValue(entity2)
+    }
+
+    /**
+     * Same as [firstOperation] except that it reads an entity before executing T2
+     */
+    @Transactional
+    open fun updateEntityAfterItWasFetched(key: Long, transactionStarted: OneOffFlag, startOperationSignal: OneOffFlag) {
+        logger.debug { "T1 has been opened" }
+
+        val entity1 = getEntity(key)
+        logger.debug { "T1: entity is $entity1" }
         transactionStarted.set()
 
         startOperationSignal.await()
