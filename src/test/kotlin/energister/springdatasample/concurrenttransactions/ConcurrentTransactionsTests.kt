@@ -1,6 +1,7 @@
 package energister.springdatasample.concurrenttransactions
 
 import energister.springdatasample.OneOffFlag
+import energister.springdatasample.SomeEntity
 import energister.springdatasample.SomeEntityRepository
 import mu.KotlinLogging
 import org.junit.Test
@@ -25,13 +26,21 @@ class ConcurrentTransactionsTests {
         fun createNewRowService(repository: SomeEntityRepository): CreateNewRowService {
             return CreateNewRowService(repository)
         }
+
+        @Bean
+        fun updateRowService(repository: SomeEntityRepository): UpdateRowService {
+            return UpdateRowService(repository)
+        }
     }
 
     @Autowired
-    internal lateinit var someEntityRepository: SomeEntityRepository
+    internal lateinit var repository: SomeEntityRepository
 
     @Autowired
-    internal lateinit var newRowService: CreateNewRowService
+    internal lateinit var createService: CreateNewRowService
+
+    @Autowired
+    internal lateinit var updateService: UpdateRowService
 
     private fun <T> executeInThread(code: () -> T): CompletableFuture<T> {
         val future = CompletableFuture<T>()
@@ -48,19 +57,46 @@ class ConcurrentTransactionsTests {
 
     @Test
     fun createNewEntity() {
-        someEntityRepository.deleteAll()
+        repository.deleteAll()
 
         val firstOperationTransactionStarted = OneOffFlag()
         val secondOperationCompleted = OneOffFlag()
 
         val firstOperation = executeInThread {
-            newRowService.firstOperation(firstOperationTransactionStarted, secondOperationCompleted)
+            createService.firstOperation(firstOperationTransactionStarted, secondOperationCompleted)
             logger.debug { "First operation has committed it's result to DB" }
         }
 
         firstOperationTransactionStarted.await()
 
-        newRowService.secondOperation()
+        createService.secondOperation()
+        logger.debug { "Second operation has committed it's result to DB" }
+        secondOperationCompleted.set()
+
+        println(firstOperation.get())
+    }
+
+    @Test
+    fun updateExistingEntity() {
+        // create entity if it doesn't exist
+        val entity = repository.findAll().firstOrNull()
+        val entityId: Long = if (entity == null) {
+            repository.save(SomeEntity(1)).id!!
+        } else {
+            entity.id!!
+        }
+
+        val firstOperationTransactionStarted = OneOffFlag()
+        val secondOperationCompleted = OneOffFlag()
+
+        val firstOperation = executeInThread {
+            updateService.firstOperation(entityId, firstOperationTransactionStarted, secondOperationCompleted)
+            logger.debug { "First operation has committed it's result to DB" }
+        }
+
+        firstOperationTransactionStarted.await()
+
+        updateService.secondOperation(entityId)
         logger.debug { "Second operation has committed it's result to DB" }
         secondOperationCompleted.set()
 
