@@ -8,7 +8,7 @@ import javax.persistence.GenerationType
 import javax.persistence.Id
 
 @Entity
-class SomeEntity(var value: Int) {
+data class SomeEntity(var value: Int) {
     @Id
     @GenericGenerator(
             name = "some_entity_id_seq",

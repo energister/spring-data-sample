@@ -12,23 +12,26 @@ open class UpdateRowService(private val repository: SomeEntityRepository) {
 
     @Transactional
     open fun firstOperation(key: Long, transactionStarted: OneOffFlag, startOperationSignal: OneOffFlag) {
-        logger.debug { "First operation has begun transaction" }
+        logger.debug { "T1 has been opened" }
+
 //        val entity = getEntity()
-//        logger.debug { "First operation: entity is $entity" }
+//        logger.debug { "T1: entity is $entity1" }
         transactionStarted.set()
 
         startOperationSignal.await()
-        logger.debug { "First operation continue to do its job" }
+        logger.debug { "T1 continue to do its job" }
 
         val entity2 = getEntity2(key)
-        logger.debug { "First operation: entity is $entity2" }
+        logger.debug { "T1: entity is $entity2" }
         increaseValue(entity2)
     }
 
     @Transactional
     open fun secondOperation(key: Long) {
-        logger.debug { "Second operation has begun transaction" }
+        logger.debug { "T2 has been opened" }
+
         val entity = getEntity(key)
+        logger.debug { "T2: entity is $entity" }
         increaseValue(entity)
     }
 
