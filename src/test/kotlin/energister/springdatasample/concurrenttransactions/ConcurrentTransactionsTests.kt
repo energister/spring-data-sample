@@ -64,16 +64,16 @@ class ConcurrentTransactionsTests {
 
         val firstOperation = executeInThread {
             createService.firstOperation(firstOperationTransactionStarted, secondOperationCompleted)
-            logger.debug { "First operation has committed it's result to DB" }
+            logger.debug { "T1 has been committed" }
         }
 
         firstOperationTransactionStarted.await()
 
         createService.secondOperation()
-        logger.debug { "Second operation has committed it's result to DB" }
+        logger.debug { "T2 has been committed" }
         secondOperationCompleted.set()
 
-        println(firstOperation.get())
+        firstOperation.get()
     }
 
     @Test
